@@ -11,5 +11,5 @@ main.c – A minimalist arcade simulation showcasing real-time neural learning.
 
 🚀 Build & Run
 
-gcc - o2 main.c mlp.c -o paddle -lm
+gcc -o2 main.c mlp.c -o paddle -lm
 ./paddle
