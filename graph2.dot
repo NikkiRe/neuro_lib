@@ -1,0 +1,48 @@
+digraph System2 {
+    rankdir=TB;
+    node [shape=circle, style=filled, fillcolor=lightgreen, fontsize=10];
+    edge [fontsize=9];
+    
+    label="Граф переходов Системы 2 (M/H₂.₂/1/2)\nλ₁=0.100, λ₂=0.600, μ₁=0.0228, μ₂=0.2302";
+    labelloc="t";
+    fontsize=14;
+    
+    // Состояния
+    S0 [label="S0\n(0,-)\n(пусто)", fillcolor=lightblue];
+    S1 [label="S1\n(1,φ1)\n(фаза 1)", fillcolor=lightgreen];
+    S2 [label="S2\n(1,φ2)\n(фаза 2)", fillcolor=lightyellow];
+    S3 [label="S3\n(2,φ1)\n(q=1,φ1)", fillcolor=lightgreen];
+    S4 [label="S4\n(2,φ2)\n(q=1,φ2)", fillcolor=lightyellow];
+    S5 [label="S5\n(3,φ1)\n(ПОЛНА)", fillcolor=pink];
+    S6 [label="S6\n(3,φ2)\n(ПОЛНА)", fillcolor=pink];
+    
+    // Переходы - группируем по типам
+    
+    // Прибытия с началом фазы 1 (синие)
+    S0 -> S1 [label="λ₁=0.100", color=blue];
+    S1 -> S3 [label="λ₁=0.100", color=blue];
+    S2 -> S3 [label="λ₁=0.100", color=blue];
+    S3 -> S5 [label="λ₁=0.100", color=blue];
+    S4 -> S5 [label="λ₁=0.100", color=blue];
+    
+    // Прибытия с началом фазы 2 (зеленые)
+    S0 -> S2 [label="λ₂=0.600", color=green];
+    S1 -> S4 [label="λ₂=0.600", color=green];
+    S2 -> S4 [label="λ₂=0.600", color=green];
+    S3 -> S6 [label="λ₂=0.600", color=green];
+    S4 -> S6 [label="λ₂=0.600", color=green];
+    
+    // Завершения фазы 1 (красные)
+    S1 -> S0 [label="μ₁=0.0228", color=red];
+    S3 -> S1 [label="μ₁×q=0.0033", color=red, style=dashed];
+    S3 -> S2 [label="μ₁×(1-q)=0.0195", color=red, style=dashed];
+    S5 -> S3 [label="μ₁×q=0.0033", color=red, style=dashed];
+    S5 -> S4 [label="μ₁×(1-q)=0.0195", color=red, style=dashed];
+    
+    // Завершения фазы 2 (оранжевые)
+    S2 -> S0 [label="μ₂=0.2302", color=orange];
+    S4 -> S1 [label="μ₂×q=0.0329", color=orange, style=dashed];
+    S4 -> S2 [label="μ₂×(1-q)=0.1974", color=orange, style=dashed];
+    S6 -> S3 [label="μ₂×q=0.0329", color=orange, style=dashed];
+    S6 -> S4 [label="μ₂×(1-q)=0.1974", color=orange, style=dashed];
+}
