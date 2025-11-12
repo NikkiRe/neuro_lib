@@ -294,7 +294,7 @@ fork(void)
       np->ofile[i] = filedup(p->ofile[i]);
   np->cwd = idup(p->cwd);
 
-  safestrcpy(np->name, p->name, sizeof(p->name));
+  safestrcpy(np->name, p->name, sizeof(np->name));
 
   pid = np->pid;
 
@@ -549,8 +549,7 @@ uaddr_in_range(struct proc *p, uint64 uva, uint64 len)
   // Адреса >= 0x80000000 обычно зарезервированы для ядра или невалидны для пользовательского пространства
   // Это ускорит проверку для теста badarg, который использует 0xffffffff
   // Делаем эту проверку ДО проверки p->sz, чтобы избежать лишних обращений к памяти
-  // Также проверяем конкретно на 0xffffffff и другие явно невалидные адреса
-  if (uva >= 0x80000000ULL || uva == 0xffffffffULL) {
+  if (uva >= 0x80000000ULL) {
     return 0;
   }
 
