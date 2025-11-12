@@ -119,7 +119,6 @@ allocproc(void)
   }
 
   memset(p, 0, sizeof(struct proc));
-  initlock(&p->lock, "proc");
   p->pid = allocpid();
   p->state = USED;
 
@@ -250,11 +249,8 @@ userinit(void)
 
   acquire(&proc_table_lock);
   proc_table_push(&proc_table, p);
-  release(&proc_table_lock);
-  
-  acquire(&p->lock);
   p->state = RUNNABLE;
-  release(&p->lock);
+  release(&proc_table_lock);
 }
 
 int
@@ -310,11 +306,8 @@ fork(void)
 
   acquire(&proc_table_lock);
   proc_table_push(&proc_table, np);
-  release(&proc_table_lock);
-
-  acquire(&np->lock);
   np->state = RUNNABLE;
-  release(&np->lock);
+  release(&proc_table_lock);
 
   return pid;
 }
@@ -359,13 +352,12 @@ exit(int status) {
 
   wakeup(p->parent);
 
-  acquire(&p->lock);
-
   p->xstate = status;
   p->state = ZOMBIE;
 
   release(&wait_lock);
 
+  acquire(&proc_table_lock);
   sched();
   panic("zombie exit");
 }
@@ -385,22 +377,18 @@ wait(uint64 addr)
     for (table_i = proc_table.next; table_i != &proc_table; table_i = table_i->next) {
       pp = table_i;
       if (pp->parent == p) {
-        acquire(&pp->lock);
         havekids = 1;
         if (pp->state == ZOMBIE) {
           pid = pp->pid;
           if (addr != 0 && copyout(p->pagetable, addr, (char *) &pp->xstate,
                                    sizeof(pp->xstate)) < 0) {
-            release(&pp->lock);
             release(&wait_lock);
             return -1;
           }
           freeproc(pp);
-          release(&pp->lock);
           release(&wait_lock);
           return pid;
         }
-        release(&pp->lock);
       }
     }
 
@@ -425,7 +413,6 @@ scheduler(void) {
     struct proc *table_i;
     for (table_i = proc_table.next; table_i != &proc_table; table_i = table_i->next) {
       p = table_i;
-      acquire(&p->lock);
       if (p->state == RUNNABLE) {
         p->state = RUNNING;
         c->proc = p;
@@ -433,7 +420,6 @@ scheduler(void) {
         c->proc = 0;
         found = 1;
       }
-      release(&p->lock);
     }
     release(&proc_table_lock);
     if (found == 0) {
@@ -449,8 +435,8 @@ sched(void)
   int intena;
   struct proc *p = myproc();
 
-  if(!holding(&p->lock))
-    panic("sched p->lock");
+  if(!holding(&proc_table_lock))
+    panic("sched proc_table_lock");
   if(mycpu()->noff != 1)
     panic("sched locks");
   if(p->state == RUNNING)
@@ -467,10 +453,10 @@ void
 yield(void)
 {
   struct proc *p = myproc();
-  acquire(&p->lock);
+  acquire(&proc_table_lock);
   p->state = RUNNABLE;
   sched();
-  release(&p->lock);
+  release(&proc_table_lock);
 }
 
 void
@@ -478,7 +464,7 @@ forkret(void)
 {
   static int first = 1;
 
-  release(&myproc()->lock);
+  release(&proc_table_lock);
 
   if (first) {
     first = 0;
@@ -493,8 +479,10 @@ sleep(void *chan, struct spinlock *lk)
 {
   struct proc *p = myproc();
 
-  acquire(&p->lock);
-  release(lk);
+  if(lk != &proc_table_lock) {
+    acquire(&proc_table_lock);
+    release(lk);
+  }
 
   p->chan = chan;
   p->state = SLEEPING;
@@ -503,8 +491,10 @@ sleep(void *chan, struct spinlock *lk)
 
   p->chan = 0;
 
-  release(&p->lock);
-  acquire(lk);
+  if(lk != &proc_table_lock) {
+    release(&proc_table_lock);
+    acquire(lk);
+  }
 }
 
 void
@@ -514,11 +504,9 @@ wakeup(void *chan)
   acquire(&proc_table_lock);
   for(p = proc_table.next; p != &proc_table; p = p->next) {
     if(p != myproc()){
-      acquire(&p->lock);
       if(p->state == SLEEPING && p->chan == chan) {
         p->state = RUNNABLE;
       }
-      release(&p->lock);
     }
   }
   release(&proc_table_lock);
@@ -531,12 +519,10 @@ kill(int pid)
   acquire(&proc_table_lock);
   for(p = proc_table.next; p != &proc_table; p = p->next) {
     if(p->pid == pid){
-      acquire(&p->lock);
       p->killed = 1;
       if(p->state == SLEEPING){
         p->state = RUNNABLE;
       }
-      release(&p->lock);
       release(&proc_table_lock);
       return 0;
     }
@@ -548,18 +534,18 @@ kill(int pid)
 void
 setkilled(struct proc *p)
 {
-  acquire(&p->lock);
+  acquire(&proc_table_lock);
   p->killed = 1;
-  release(&p->lock);
+  release(&proc_table_lock);
 }
 
 int
 killed(struct proc *p)
 {
   int k;
-  acquire(&p->lock);
+  acquire(&proc_table_lock);
   k = p->killed;
-  release(&p->lock);
+  release(&proc_table_lock);
   return k;
 }
 
