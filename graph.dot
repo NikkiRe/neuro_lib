@@ -1,0 +1,55 @@
+digraph System1 {
+    rankdir=TB;
+    node [shape=circle, style=filled, fillcolor=lightblue, fontsize=10];
+    edge [fontsize=9];
+    
+    label="Граф переходов Системы 1\nλ₁=0.525, λ₂=0.175, μ=0.1";
+    labelloc="t";
+    fontsize=14;
+    
+    // Состояния
+    S0 [label="S0\n0/0/0\n(пусто)"];
+    S1 [label="S1\n1/0/0\n(П1)"];
+    S2 [label="S2\n0/1/0\n(П2)"];
+    S3 [label="S3\n1/1/0\n(оба)"];
+    S4 [label="S4\n0/1/1\n(П2,q=1)"];
+    S5 [label="S5\n0/1/2\n(П2,q=2)"];
+    S6 [label="S6\n1/1/1\n(оба,q=1)"];
+    S7 [label="S7\n0/1/3\n(П2,ПОЛНА)", fillcolor=pink];
+    S8 [label="S8\n1/1/2\n(оба,q=2)"];
+    S9 [label="S9\n1/1/3\n(оба,ПОЛНА)", fillcolor=pink];
+    
+    // Переходы - упорядочим по типам
+    
+    // Прибытия λ₁ (синие)
+    S0 -> S1 [label="λ₁=0.525", color=blue];
+    S2 -> S3 [label="λ₁=0.525", color=blue];
+    S4 -> S7 [label="λ₁=0.525", color=blue];
+    S5 -> S8 [label="λ₁=0.525", color=blue];
+    S6 -> S9 [label="λ₁=0.525", color=blue];
+    
+    // Прибытия λ₂ (зеленые)
+    S0 -> S2 [label="λ₂=0.175", color=green];
+    S1 -> S3 [label="λ₂=0.175", color=green];
+    S2 -> S4 [label="λ₂=0.175", color=green];
+    S3 -> S7 [label="λ₂=0.175", color=green];
+    S4 -> S5 [label="λ₂=0.175", color=green];
+    S5 -> S6 [label="λ₂=0.175", color=green];
+    S7 -> S8 [label="λ₂=0.175", color=green];
+    S8 -> S9 [label="λ₂=0.175", color=green];
+    
+    // Завершения μ (красные)
+    S1 -> S0 [label="μ=0.1", color=red];
+    S2 -> S0 [label="μ=0.1", color=red];
+    S3 -> S1 [label="μ=0.1", color=red];
+    S3 -> S2 [label="μ=0.1", color=red];
+    S4 -> S2 [label="μ=0.1", color=red];
+    S5 -> S4 [label="μ=0.1", color=red];
+    S6 -> S5 [label="μ=0.1", color=red];
+    S7 -> S3 [label="μ=0.1", color=red];
+    S7 -> S4 [label="μ=0.1", color=red];
+    S8 -> S5 [label="μ=0.1", color=red];
+    S8 -> S7 [label="μ=0.1", color=red];
+    S9 -> S6 [label="μ=0.1", color=red];
+    S9 -> S8 [label="μ=0.1", color=red];
+}
